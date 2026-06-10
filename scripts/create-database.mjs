@@ -1,0 +1,32 @@
+import { neon } from "@neondatabase/serverless";
+
+const sql = neon(process.env.DATABASE_URL);
+
+await sql`
+  CREATE TABLE IF NOT EXISTS quiz_results (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subject TEXT NOT NULL CHECK (subject IN ('math', 'thai', 'english')),
+    score INTEGER NOT NULL,
+    total INTEGER NOT NULL,
+    answers JSONB NOT NULL,
+    audio_data BYTEA,
+    audio_type TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`;
+
+await sql`CREATE INDEX IF NOT EXISTS quiz_results_created_at_idx ON quiz_results (created_at DESC)`;
+
+await sql`
+  CREATE TABLE IF NOT EXISTS quiz_recordings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    result_id UUID NOT NULL REFERENCES quiz_results(id) ON DELETE CASCADE,
+    question_index INTEGER NOT NULL,
+    recording_name TEXT NOT NULL,
+    audio_data BYTEA NOT NULL,
+    audio_type TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`;
+await sql`CREATE INDEX IF NOT EXISTS quiz_recordings_result_id_idx ON quiz_recordings (result_id)`;
+console.log("Database ready");
