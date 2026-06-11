@@ -21,6 +21,33 @@ import { useEffect, useMemo, useRef, useState } from "react";
 type Grade = 1 | 2 | 3;
 type Subject = "math" | "thai" | "english";
 type Screen = "home" | "quiz" | "result";
+const PROGRESS_KEY = "deekeng-quiz-progress";
+
+type SavedProgress = {
+  subject: Subject;
+  questionIndex: number;
+  answers: (number | null)[];
+  sessionId: string;
+  screen: Screen;
+};
+
+function loadSavedProgress(): SavedProgress | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(PROGRESS_KEY) || "null");
+    if (!saved?.sessionId || !["math", "thai", "english"].includes(saved.subject)) return null;
+    return {
+      subject: saved.subject,
+      questionIndex: Number(saved.questionIndex) || 0,
+      answers: Array.isArray(saved.answers) ? saved.answers : [],
+      sessionId: saved.sessionId,
+      screen: saved.screen === "result" ? "result" : "quiz",
+    };
+  } catch {
+    window.localStorage.removeItem(PROGRESS_KEY);
+    return null;
+  }
+}
 
 type Question = {
   id?: string;
@@ -136,24 +163,24 @@ const questionBank: Record<Subject, Record<Grade, Question[]>> = {
 };
 
 export default function HomePage() {
-  const [screen, setScreen] = useState<Screen>("home");
-  const [subject, setSubject] = useState<Subject>("math");
-  const [questionIndex, setQuestionIndex] = useState(0);
+  const [savedProgress] = useState(loadSavedProgress);
+  const [screen, setScreen] = useState<Screen>(savedProgress?.screen || "home");
+  const [subject, setSubject] = useState<Subject>(savedProgress?.subject || "math");
+  const [questionIndex, setQuestionIndex] = useState(savedProgress?.questionIndex || 0);
   const [selected, setSelected] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [answers, setAnswers] = useState<(number | null)[]>(savedProgress?.answers || []);
   const [isRecording, setIsRecording] = useState(false);
   const [recordings, setRecordings] = useState<Record<number, { url: string; blob: Blob }>>({});
   const [micError, setMicError] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [adminTaps, setAdminTaps] = useState(0);
   const [isAdvancing, setIsAdvancing] = useState(false);
-  const [sessionId, setSessionId] = useState("");
+  const [sessionId, setSessionId] = useState(savedProgress?.sessionId || "");
   const [databaseQuestions, setDatabaseQuestions] = useState<Question[]>([]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reloadVersionRef = useRef<number | null>(null);
-  const currentRecording = recordings[questionIndex];
 
   const questions = useMemo<Question[]>(
     () => {
@@ -174,6 +201,8 @@ export default function HomePage() {
     (total, answer, index) => total + (answer === questions[index]?.answer ? 1 : 0),
     0,
   );
+  const activeQuestionIndex = Math.min(questionIndex, Math.max(questions.length - 1, 0));
+  const currentRecording = recordings[activeQuestionIndex];
 
   useEffect(() => {
     fetch("/api/questions", { cache: "no-store" })
@@ -185,6 +214,17 @@ export default function HomePage() {
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (screen === "home" || !sessionId) return;
+    window.localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      subject,
+      questionIndex: activeQuestionIndex,
+      answers,
+      sessionId,
+      screen,
+    }));
+  }, [activeQuestionIndex, answers, screen, sessionId, subject]);
 
   useEffect(() => {
     const checkReload = async () => {
@@ -215,7 +255,7 @@ export default function HomePage() {
     setRecordings((current) => {
       if (clearAll) return {};
       const next = { ...current };
-      delete next[questionIndex];
+      delete next[activeQuestionIndex];
       return next;
     });
     setMicError("");
@@ -249,7 +289,7 @@ export default function HomePage() {
         }
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
         const url = URL.createObjectURL(blob);
-        setRecordings((current) => ({ ...current, [questionIndex]: { blob, url } }));
+        setRecordings((current) => ({ ...current, [activeQuestionIndex]: { blob, url } }));
       };
       recorder.start();
       setIsRecording(true);
@@ -271,24 +311,32 @@ export default function HomePage() {
     setSaveStatus("idle");
     setIsAdvancing(false);
     setSessionId(crypto.randomUUID());
+    window.localStorage.removeItem(PROGRESS_KEY);
     resetRecording(true);
     setScreen("quiz");
   };
 
   const nextQuestion = (choiceAnswer: number | null = selected) => {
-    const isSpeakingQuestion = questions[questionIndex].type === "speaking";
+    const isSpeakingQuestion = questions[activeQuestionIndex].type === "speaking";
     if (choiceAnswer === null && !isSpeakingQuestion) return;
     if (isSpeakingQuestion && !currentRecording) return;
     const nextAnswers = [...answers, isSpeakingQuestion ? 0 : choiceAnswer];
     setAnswers(nextAnswers);
     setIsAdvancing(false);
-    const isComplete = questionIndex === questions.length - 1;
+    const isComplete = activeQuestionIndex === questions.length - 1;
     void saveProgress(nextAnswers, isComplete);
     if (isComplete) {
+      window.localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+        subject,
+        questionIndex: activeQuestionIndex,
+        answers: nextAnswers,
+        sessionId,
+        screen: "result",
+      }));
       setScreen("result");
       return;
     }
-    setQuestionIndex((current) => current + 1);
+    setQuestionIndex(activeQuestionIndex + 1);
     setSelected(null);
   };
 
@@ -337,6 +385,7 @@ export default function HomePage() {
 
   const goHome = () => {
     setScreen("home");
+    window.localStorage.removeItem(PROGRESS_KEY);
     setSelected(null);
     setIsAdvancing(false);
     if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
@@ -344,7 +393,7 @@ export default function HomePage() {
   };
 
   if (screen === "quiz") {
-    const current = questions[questionIndex];
+    const current = questions[activeQuestionIndex];
     const isSpeaking = current.type === "speaking";
     const isCorrect = selected === current.answer;
     return (
@@ -363,9 +412,9 @@ export default function HomePage() {
 
         <section className="mx-auto max-w-3xl px-5 py-7 md:py-10">
           <div className="mb-8 flex items-center gap-4">
-            <span className="shrink-0 text-sm font-bold text-[#75766f]">ข้อ {questionIndex + 1} / {questions.length}</span>
+            <span className="shrink-0 text-sm font-bold text-[#75766f]">ข้อ {activeQuestionIndex + 1} / {questions.length}</span>
             <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#e9e9e2]">
-              <div className="h-full rounded-full bg-[#ffc94a] transition-all duration-500" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} />
+              <div className="h-full rounded-full bg-[#ffc94a] transition-all duration-500" style={{ width: `${((activeQuestionIndex + 1) / questions.length) * 100}%` }} />
             </div>
           </div>
 
@@ -423,7 +472,7 @@ export default function HomePage() {
           </div>
 
           {isSpeaking && <button disabled={!currentRecording} onClick={() => nextQuestion()} className="primary-button mt-6 ml-auto">
-            {questionIndex === questions.length - 1 ? "ดูผลคะแนน" : "ข้อต่อไป"} <ArrowRight size={20} />
+            {activeQuestionIndex === questions.length - 1 ? "ดูผลคะแนน" : "ข้อต่อไป"} <ArrowRight size={20} />
           </button>}
         </section>
       </main>
