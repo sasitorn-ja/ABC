@@ -63,23 +63,23 @@ const subjects: Record<
 const questionBank: Record<Subject, Record<Grade, Question[]>> = {
   math: {
     1: [
-      { question: "5 + 3 เท่ากับเท่าไร?", hint: "ลองนับต่อจากเลข 5 อีก 3 ครั้ง", choices: ["7", "8", "9", "10"], answer: 1 },
-      { question: "9 - 4 เท่ากับเท่าไร?", hint: "มีเก้าชิ้น หยิบออกสี่ชิ้น", choices: ["3", "4", "5", "6"], answer: 2 },
-      { question: "10 - 4 เท่ากับเท่าไร?", hint: "มีสิบชิ้น หยิบออกสี่ชิ้น", choices: ["5", "6", "7", "8"], answer: 1 },
-      { question: "รูปสามเหลี่ยมมีกี่ด้าน?", hint: "ลองวาดแล้วนับด้านดูนะ", choices: ["2 ด้าน", "3 ด้าน", "4 ด้าน", "5 ด้าน"], answer: 1 },
+      { question: "2 + 3 เท่ากับเท่าไร?", hint: "ลองนับต่อจากเลข 2 อีก 3 ครั้ง", choices: ["4", "5", "6", "7"], answer: 1 },
+      { question: "7 - 2 เท่ากับเท่าไร?", hint: "มีเจ็ดชิ้น หยิบออกสองชิ้น", choices: ["3", "4", "5", "6"], answer: 2 },
+      { question: "6 + 7 เท่ากับเท่าไร?", hint: "ลองนับต่อจากเลข 7 อีก 6 ครั้ง", choices: ["11", "12", "13", "14"], answer: 2 },
+      { question: "15 - 8 เท่ากับเท่าไร?", hint: "นับถอยหลังจาก 15 อีก 8 ครั้ง", choices: ["6", "7", "8", "9"], answer: 1 },
       { question: "เลขใดอยู่ถัดจาก 14?", hint: "นับต่ออีกหนึ่ง", choices: ["13", "15", "16", "24"], answer: 1 },
     ],
     2: [
       { question: "24 + 15 เท่ากับเท่าไร?", hint: "บวกหลักหน่วยก่อน แล้วจึงบวกหลักสิบ", choices: ["39", "38", "49", "35"], answer: 0 },
       { question: "50 - 18 เท่ากับเท่าไร?", hint: "ลบ 20 ก่อน แล้วบวกคืน 2", choices: ["22", "28", "32", "38"], answer: 2 },
-      { question: "3 กลุ่ม กลุ่มละ 4 ชิ้น มีทั้งหมดกี่ชิ้น?", hint: "ลองบวก 4 ซ้ำกัน 3 ครั้ง", choices: ["7", "10", "12", "14"], answer: 2 },
+      { question: "67 + 28 เท่ากับเท่าไร?", hint: "บวกหลักหน่วยก่อน แล้วทดไปหลักสิบ", choices: ["85", "93", "95", "105"], answer: 2 },
       { question: "ครึ่งหนึ่งของ 20 คือเท่าไร?", hint: "แบ่ง 20 เป็นสองกลุ่มเท่า ๆ กัน", choices: ["5", "10", "15", "20"], answer: 1 },
       { question: "ข้อใดเรียงจากน้อยไปมากถูกต้อง?", hint: "เริ่มจากตัวเลขที่มีค่าน้อยที่สุด", choices: ["8, 5, 2", "2, 5, 8", "5, 2, 8", "2, 8, 5"], answer: 1 },
     ],
     3: [
       { question: "125 + 248 เท่ากับเท่าไร?", hint: "บวกทีละหลักจากขวาไปซ้าย", choices: ["363", "373", "383", "473"], answer: 1 },
       { question: "500 - 275 เท่ากับเท่าไร?", hint: "ลบทีละหลักจากขวาไปซ้าย", choices: ["215", "225", "235", "325"], answer: 1 },
-      { question: "72 ÷ 9 เท่ากับเท่าไร?", hint: "เก้าคูณอะไรได้เจ็ดสิบสอง", choices: ["6", "7", "8", "9"], answer: 2 },
+      { question: "468 + 357 เท่ากับเท่าไร?", hint: "บวกทีละหลักและอย่าลืมตัวทด", choices: ["715", "815", "825", "835"], answer: 2 },
       { question: "หนึ่งในสี่ของ 20 คือเท่าไร?", hint: "แบ่ง 20 เป็น 4 กลุ่มเท่า ๆ กัน", choices: ["4", "5", "10", "15"], answer: 1 },
       { question: "1 เมตร เท่ากับกี่เซนติเมตร?", hint: "หนึ่งไม้บรรทัดยาว 30 เซนติเมตร", choices: ["10", "50", "100", "1,000"], answer: 2 },
     ],
@@ -150,7 +150,16 @@ export default function HomePage() {
   const currentRecording = recordings[questionIndex];
 
   const questions = useMemo<Question[]>(
-    () => ([1, 2, 3] as Grade[]).flatMap((level) => questionBank[subject][level].slice(0, 2)),
+    () => {
+      if (subject === "math") {
+        return [
+          ...questionBank.math[1].slice(0, 4),
+          ...questionBank.math[2].slice(0, 3),
+          ...questionBank.math[3].slice(0, 3),
+        ];
+      }
+      return ([1, 2, 3] as Grade[]).flatMap((level) => questionBank[subject][level].slice(0, 2));
+    },
     [subject],
   );
   const score = answers.reduce<number>(
