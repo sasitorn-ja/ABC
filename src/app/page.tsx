@@ -86,22 +86,22 @@ const questionBank: Record<Subject, Record<Grade, Question[]>> = {
   },
   thai: {
     1: [
-      { question: "คำใดขึ้นต้นด้วยพยัญชนะ ก?", hint: "ลองออกเสียงคำทีละคำ", choices: ["ปลา", "ไก่", "แมว", "เรือ"], answer: 1 },
-      { question: "ข้อใดเป็นสระ?", hint: "สระช่วยให้พยัญชนะออกเสียงได้", choices: ["ก", "ข", "า", "ง"], answer: 2 },
+      { question: "อ่านคำง่าย ๆ", hint: "กดไมค์ แล้วอ่านทีละคำ", choices: [], answer: 0, type: "speaking", speakingText: "กา • ตา • มา • ยา • ปลา", recordingName: "อ่านคำง่าย ๆ" },
+      { question: "อ่านชื่อสัตว์", hint: "กดไมค์ แล้วอ่านทีละคำ", choices: [], answer: 0, type: "speaking", speakingText: "แมว • ไก่ • ปลา • ช้าง • ม้า", recordingName: "อ่านชื่อสัตว์" },
       { question: "คำใดมี 2 พยางค์?", hint: "ลองปรบมือตามจังหวะคำ", choices: ["บ้าน", "โรงเรียน", "นก", "ดาว"], answer: 1 },
       { question: "คำใดมีความหมายตรงข้ามกับ 'ร้อน'?", hint: "นึกถึงน้ำแข็ง", choices: ["อุ่น", "เย็น", "แห้ง", "สว่าง"], answer: 1 },
       { question: "ประโยคใดถูกต้อง?", hint: "ประโยคที่ดีต้องเล่าเรื่องได้ครบ", choices: ["แมว กิน ปลา", "ปลา แมว กิน", "กิน ปลา แมว", "แมว ปลา กิน"], answer: 0 },
     ],
     2: [
-      { question: "คำใดเป็นคำนาม?", hint: "คำนามใช้เรียกชื่อคน สัตว์ สิ่งของ", choices: ["วิ่ง", "โต๊ะ", "เร็ว", "สวย"], answer: 1 },
-      { question: "คำใดเป็นคำกริยา?", hint: "คำกริยาบอกการกระทำ", choices: ["น้อง", "หนังสือ", "อ่าน", "ใหญ่"], answer: 2 },
+      { question: "อ่านคำสองพยางค์", hint: "กดไมค์ แล้วอ่านทีละคำ", choices: [], answer: 0, type: "speaking", speakingText: "มะนาว • ทะเล • ภูเขา • กระเป๋า", recordingName: "อ่านคำสองพยางค์" },
+      { question: "อ่านประโยคสั้น", hint: "กดไมค์ แล้วอ่านช้า ๆ", choices: [], answer: 0, type: "speaking", speakingText: "แม่ ทำ อาหาร", recordingName: "อ่านประโยค แม่ทำอาหาร" },
       { question: "ข้อใดสะกดถูกต้อง?", hint: "ลองอ่านออกเสียงช้า ๆ", choices: ["กะเพรา", "กระเพา", "กะเพา", "กระเพรา"], answer: 0 },
       { question: "คำใดคล้องจองกับ 'ดาว'?", hint: "ฟังเสียงท้ายของคำ", choices: ["เดือน", "ขาว", "ฟ้า", "ดิน"], answer: 1 },
       { question: "คำว่า 'คุณครู' ใช้เรียกใคร?", hint: "คนที่ช่วยสอนเราในโรงเรียน", choices: ["ผู้เรียน", "ผู้สอน", "ผู้ขาย", "ผู้ซื้อ"], answer: 1 },
     ],
     3: [
-      { question: "ข้อใดเป็นประโยคคำถาม?", hint: "ประโยคคำถามต้องการคำตอบ", choices: ["ฉันชอบอ่านหนังสือ", "วันนี้อากาศดี", "เธอชื่ออะไร", "อย่าวิ่งในห้อง"], answer: 2 },
-      { question: "คำใดเป็นคำวิเศษณ์?", hint: "คำวิเศษณ์ช่วยขยายให้ชัดเจนขึ้น", choices: ["แมว", "กิน", "เร็ว", "อาหาร"], answer: 2 },
+      { question: "อ่านประโยค", hint: "กดไมค์ แล้วอ่านให้ชัดเจน", choices: [], answer: 0, type: "speaking", speakingText: "ฉัน ชอบ อ่าน หนังสือ", recordingName: "อ่านประโยค ฉันชอบอ่านหนังสือ" },
+      { question: "อ่านเรื่องสั้น", hint: "กดไมค์ แล้วอ่านให้จบ", choices: [], answer: 0, type: "speaking", speakingText: "วันนี้ อากาศ ดี น้อง ไป เล่น ที่ สนาม", recordingName: "อ่านเรื่องสั้น" },
       { question: "สำนวน 'น้ำขึ้นให้รีบตัก' สอนเรื่องใด?", hint: "เมื่อมีโอกาสดี เราควรทำอย่างไร", choices: ["ให้ประหยัดน้ำ", "ให้รีบคว้าโอกาส", "ให้ตื่นเช้า", "ให้ช่วยกันทำงาน"], answer: 1 },
       { question: "ข้อใดใช้ไม้ยมกได้ถูกต้อง?", hint: "ไม้ยมกใช้แทนคำที่กล่าวซ้ำ", choices: ["เด็กๆ", "กินๆข้าว", "บ้านๆฉัน", "ไปๆมา"], answer: 0 },
       { question: "คำใดมีความหมายเหมือนกับ 'งดงาม'?", hint: "ใช้ชมสิ่งที่มองแล้วชอบ", choices: ["รวดเร็ว", "สวยงาม", "แข็งแรง", "เงียบสงบ"], answer: 1 },
@@ -313,7 +313,7 @@ export default function HomePage() {
             <h1 className="mb-8 text-2xl font-extrabold leading-relaxed text-[#252827] md:text-3xl">{current.question}</h1>
             {isSpeaking ? (
               <div className="text-center">
-                <div className="alphabet-strip mb-4">{current.speakingText}</div>
+                <div className={`alphabet-strip mb-4 ${subject === "thai" ? "thai-reading-strip" : ""}`}>{current.speakingText}</div>
                 {current.pronunciation && <div className="pronunciation-strip mb-8">{current.pronunciation}</div>}
                 {!currentRecording ? (
                   <button
@@ -387,7 +387,7 @@ export default function HomePage() {
             <div className="score-box"><strong>+{score * 10}</strong><span>ดาวที่ได้</span></div>
           </div>
 
-          {Object.keys(recordings).length > 0 && subject === "english" && (
+          {Object.keys(recordings).length > 0 && (
             <div className="mb-7 rounded-2xl bg-[#effbf7] p-5 text-left">
               <p className="mb-3 text-center font-black text-[#19785b]">เสียงของฉัน</p>
               {Object.entries(recordings).map(([index, recording]) => (
