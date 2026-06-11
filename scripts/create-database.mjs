@@ -16,6 +16,10 @@ await sql`
 `;
 
 await sql`CREATE INDEX IF NOT EXISTS quiz_results_created_at_idx ON quiz_results (created_at DESC)`;
+await sql`ALTER TABLE quiz_results ADD COLUMN IF NOT EXISTS session_id UUID`;
+await sql`ALTER TABLE quiz_results ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT TRUE`;
+await sql`ALTER TABLE quiz_results ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`;
+await sql`CREATE UNIQUE INDEX IF NOT EXISTS quiz_results_session_id_idx ON quiz_results (session_id) WHERE session_id IS NOT NULL`;
 
 await sql`
   CREATE TABLE IF NOT EXISTS quiz_recordings (
@@ -29,4 +33,5 @@ await sql`
   )
 `;
 await sql`CREATE INDEX IF NOT EXISTS quiz_recordings_result_id_idx ON quiz_recordings (result_id)`;
+await sql`CREATE UNIQUE INDEX IF NOT EXISTS quiz_recordings_result_question_idx ON quiz_recordings (result_id, question_index)`;
 console.log("Database ready");

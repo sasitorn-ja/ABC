@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   const results = await sql`
-    SELECT r.id, r.subject, r.score, r.total, r.answers, r.created_at,
+    SELECT r.id, r.subject, r.score, r.total, r.answers, r.completed, r.created_at, r.updated_at,
       COALESCE(
         json_agg(json_build_object('id', q.id, 'name', q.recording_name, 'question_index', q.question_index) ORDER BY q.question_index)
         FILTER (WHERE q.id IS NOT NULL), '[]'
@@ -22,5 +22,5 @@ export async function GET(request: Request) {
     LIMIT 200
   `;
 
-  return NextResponse.json(results);
+  return NextResponse.json(results, { headers: { "Cache-Control": "no-store" } });
 }

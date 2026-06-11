@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CalendarDays, Check, Headphones, LockKeyhole, X } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Headphones, LockKeyhole, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -18,7 +18,9 @@ type Result = {
   total: number;
   answers: Answer[];
   recordings: { id: string; name: string; question_index: number }[];
+  completed: boolean;
   created_at: string;
+  updated_at: string;
 };
 
 const subjectNames = { math: "123", thai: "กข", english: "ABC" };
@@ -47,6 +49,8 @@ export default function AdminPage() {
   const [results, setResults] = useState<Result[] | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const isAuthenticated = results !== null;
 
   const loadResults = async () => {
     setLoading(true);
@@ -58,8 +62,25 @@ export default function AdminPage() {
       return;
     }
     setResults(await response.json());
+    setLastUpdated(new Date());
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated || !pin) return;
+    const refresh = async () => {
+      const response = await fetch("/api/admin/results", {
+        headers: { "x-admin-pin": pin },
+        cache: "no-store",
+      });
+      if (response.ok) {
+        setResults(await response.json());
+        setLastUpdated(new Date());
+      }
+    };
+    const timer = window.setInterval(() => void refresh(), 2000);
+    return () => window.clearInterval(timer);
+  }, [isAuthenticated, pin]);
 
   if (results === null) {
     return (
@@ -80,7 +101,11 @@ export default function AdminPage() {
     <main className="min-h-screen bg-[#f8f8f4] px-5 py-8">
       <section className="mx-auto max-w-5xl">
         <div className="mb-7 flex items-center justify-between">
-          <div><p className="font-bold text-[#8273e8]">ผู้ดูแล</p><h1 className="text-3xl font-black">คำตอบย้อนหลัง</h1></div>
+          <div>
+            <p className="font-bold text-[#8273e8]">ผู้ดูแล</p>
+            <h1 className="text-3xl font-black">คำตอบเรียลไทม์</h1>
+            <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[#35a27e]"><Activity size={15} /> ออนไลน์ • อัปเดตอัตโนมัติทุก 2 วินาที {lastUpdated && `• ${lastUpdated.toLocaleTimeString("th-TH")}`}</p>
+          </div>
           <Link href="/" className="round-button"><ArrowLeft size={20} /></Link>
         </div>
         <div className="grid gap-5">
@@ -88,8 +113,12 @@ export default function AdminPage() {
           {results.map((result) => (
             <article key={result.id} className="rounded-3xl bg-white p-5 shadow-sm md:p-7">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#eeeeE8] pb-4">
-                <div className="flex items-center gap-3"><strong className="rounded-xl bg-[#f1efff] px-3 py-2 text-[#6657cf]">{subjectNames[result.subject]}</strong><span className="font-black">{result.score}/{result.total}</span></div>
-                <span className="flex items-center gap-2 text-sm font-bold text-[#888a83]"><CalendarDays size={17} /> {new Date(result.created_at).toLocaleString("th-TH")}</span>
+                <div className="flex items-center gap-3">
+                  <strong className="rounded-xl bg-[#f1efff] px-3 py-2 text-[#6657cf]">{subjectNames[result.subject]}</strong>
+                  <span className="font-black">{result.score}/{result.total}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-black ${result.completed ? "bg-[#e9f8f1] text-[#19785b]" : "live-badge bg-[#fff4d8] text-[#b77a10]"}`}>{result.completed ? "เสร็จแล้ว" : `กำลังทำ ${result.answers.length}/${result.total}`}</span>
+                </div>
+                <span className="flex items-center gap-2 text-sm font-bold text-[#888a83]"><CalendarDays size={17} /> {new Date(result.updated_at).toLocaleString("th-TH")}</span>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 {result.answers.map((answer, index) => (

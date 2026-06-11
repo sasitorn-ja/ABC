@@ -144,6 +144,7 @@ export default function HomePage() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [adminTaps, setAdminTaps] = useState(0);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [sessionId, setSessionId] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -237,6 +238,7 @@ export default function HomePage() {
     setAnswers([]);
     setSaveStatus("idle");
     setIsAdvancing(false);
+    setSessionId(crypto.randomUUID());
     resetRecording(true);
     setScreen("quiz");
   };
@@ -248,8 +250,9 @@ export default function HomePage() {
     const nextAnswers = [...answers, isSpeakingQuestion ? 0 : choiceAnswer];
     setAnswers(nextAnswers);
     setIsAdvancing(false);
-    if (questionIndex === questions.length - 1) {
-      void saveResult(nextAnswers);
+    const isComplete = questionIndex === questions.length - 1;
+    void saveProgress(nextAnswers, isComplete);
+    if (isComplete) {
       setScreen("result");
       return;
     }
@@ -264,9 +267,9 @@ export default function HomePage() {
     advanceTimerRef.current = setTimeout(() => nextQuestion(answer), 650);
   };
 
-  const saveResult = async (finalAnswers: (number | null)[]) => {
-    setSaveStatus("saving");
-    const answerDetails = finalAnswers.map((answer, index) => {
+  const saveProgress = async (currentAnswers: (number | null)[], completed: boolean) => {
+    if (completed) setSaveStatus("saving");
+    const answerDetails = currentAnswers.map((answer, index) => {
       const question = questions[index];
       const speaking = question.type === "speaking";
       return {
@@ -276,12 +279,14 @@ export default function HomePage() {
         correct: speaking || answer === question.answer,
       };
     });
-    const finalScore = finalAnswers.reduce<number>(
+    const finalScore = currentAnswers.reduce<number>(
       (total, answer, index) => total + (answer === questions[index].answer ? 1 : 0),
       0,
     );
     const form = new FormData();
     form.append("subject", subject);
+    form.append("sessionId", sessionId);
+    form.append("completed", String(completed));
     form.append("score", String(finalScore));
     form.append("total", String(questions.length));
     form.append("answers", JSON.stringify(answerDetails));
@@ -292,9 +297,9 @@ export default function HomePage() {
     try {
       const response = await fetch("/api/results", { method: "POST", body: form });
       if (!response.ok) throw new Error("Save failed");
-      setSaveStatus("saved");
+      if (completed) setSaveStatus("saved");
     } catch {
-      setSaveStatus("error");
+      if (completed) setSaveStatus("error");
     }
   };
 
