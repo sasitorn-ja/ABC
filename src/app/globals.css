@@ -173,6 +173,52 @@ body {
   animation: live-pulse 1.2s infinite;
 }
 
+.admin-tab {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  border: 1px solid #e6e5df;
+  border-radius: 999px;
+  background: white;
+  padding: .65rem 1rem;
+  color: #777a73;
+  font-size: .82rem;
+  font-weight: 900;
+}
+
+.admin-tab-active {
+  border-color: #8273e8;
+  background: #8273e8;
+  color: white;
+}
+
+.admin-label {
+  display: block;
+  margin-bottom: .35rem;
+  color: #686b65;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.admin-field {
+  display: block;
+  width: 100%;
+  margin-top: .3rem;
+  margin-bottom: .9rem;
+  border: 1px solid #e2e2dc;
+  border-radius: .8rem;
+  background: #fafaf7;
+  padding: .7rem .8rem;
+  outline: none;
+  color: #343735;
+  font-size: .88rem;
+  font-weight: 700;
+}
+
+.admin-field:focus {
+  border-color: #8273e8;
+}
+
 @keyframes live-pulse {
   50% {
     opacity: .55;

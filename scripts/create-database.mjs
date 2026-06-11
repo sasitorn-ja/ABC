@@ -34,4 +34,25 @@ await sql`
 `;
 await sql`CREATE INDEX IF NOT EXISTS quiz_recordings_result_id_idx ON quiz_recordings (result_id)`;
 await sql`CREATE UNIQUE INDEX IF NOT EXISTS quiz_recordings_result_question_idx ON quiz_recordings (result_id, question_index)`;
+
+await sql`
+  CREATE TABLE IF NOT EXISTS quiz_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subject TEXT NOT NULL CHECK (subject IN ('math', 'thai', 'english')),
+    position INTEGER NOT NULL,
+    type TEXT NOT NULL DEFAULT 'choice' CHECK (type IN ('choice', 'speaking')),
+    question TEXT NOT NULL,
+    hint TEXT NOT NULL DEFAULT '',
+    choices JSONB NOT NULL DEFAULT '[]',
+    answer INTEGER NOT NULL DEFAULT 0,
+    speaking_text TEXT,
+    pronunciation TEXT,
+    recording_name TEXT,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(subject, position)
+  )
+`;
+await sql`CREATE INDEX IF NOT EXISTS quiz_questions_subject_position_idx ON quiz_questions (subject, position)`;
 console.log("Database ready");

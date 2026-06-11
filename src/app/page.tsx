@@ -23,6 +23,9 @@ type Subject = "math" | "thai" | "english";
 type Screen = "home" | "quiz" | "result";
 
 type Question = {
+  id?: string;
+  subject?: Subject;
+  position?: number;
   question: string;
   hint: string;
   choices: string[];
@@ -145,6 +148,7 @@ export default function HomePage() {
   const [adminTaps, setAdminTaps] = useState(0);
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [sessionId, setSessionId] = useState("");
+  const [databaseQuestions, setDatabaseQuestions] = useState<Question[]>([]);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -152,6 +156,8 @@ export default function HomePage() {
 
   const questions = useMemo<Question[]>(
     () => {
+      const managedQuestions = databaseQuestions.filter((question) => question.subject === subject);
+      if (managedQuestions.length > 0) return managedQuestions;
       if (subject === "math") {
         return [
           ...questionBank.math[1].slice(0, 4),
@@ -161,7 +167,7 @@ export default function HomePage() {
       }
       return ([1, 2, 3] as Grade[]).flatMap((level) => questionBank[subject][level].slice(0, 2));
     },
-    [subject],
+    [databaseQuestions, subject],
   );
   const score = answers.reduce<number>(
     (total, answer, index) => total + (answer === questions[index]?.answer ? 1 : 0),
@@ -169,6 +175,10 @@ export default function HomePage() {
   );
 
   useEffect(() => {
+    fetch("/api/questions", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => Array.isArray(data) && setDatabaseQuestions(data))
+      .catch(() => undefined);
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
