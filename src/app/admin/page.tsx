@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, ArrowLeft, CalendarDays, Check, Headphones, ListChecks, LockKeyhole, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Check, Headphones, ListChecks, LockKeyhole, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -71,6 +71,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<"results" | "questions">("results");
   const [draft, setDraft] = useState<QuestionDraft>(emptyDraft);
   const [questionMessage, setQuestionMessage] = useState("");
+  const [remoteMessage, setRemoteMessage] = useState("");
   const isAuthenticated = results !== null;
 
   const loadQuestions = async () => {
@@ -131,6 +132,13 @@ export default function AdminPage() {
     await loadQuestions();
   };
 
+  const reloadChildPages = async () => {
+    if (!window.confirm("สั่งให้หน้าเว็บเด็กทุกเครื่องรีโหลดตอนนี้ใช่ไหม?")) return;
+    setRemoteMessage("กำลังส่งคำสั่ง...");
+    const response = await fetch("/api/admin/control", { method: "POST", headers: { "x-admin-pin": pin } });
+    setRemoteMessage(response.ok ? "ส่งคำสั่งแล้ว หน้าเด็กจะรีโหลดภายใน 2 วินาที" : "ส่งคำสั่งไม่สำเร็จ");
+  };
+
   if (results === null) {
     return (
       <main className="simple-home flex min-h-screen items-center justify-center px-5">
@@ -155,8 +163,12 @@ export default function AdminPage() {
             <h1 className="text-3xl font-black">คำตอบเรียลไทม์</h1>
             <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[#35a27e]"><Activity size={15} /> ออนไลน์ • อัปเดตอัตโนมัติทุก 2 วินาที {lastUpdated && `• ${lastUpdated.toLocaleTimeString("th-TH")}`}</p>
           </div>
-          <Link href="/" className="round-button"><ArrowLeft size={20} /></Link>
+          <div className="flex gap-2">
+            <button onClick={reloadChildPages} className="remote-reload-button"><RefreshCw size={18} /> รีโหลดหน้าเด็ก</button>
+            <Link href="/" className="round-button"><ArrowLeft size={20} /></Link>
+          </div>
         </div>
+        {remoteMessage && <p className="mb-5 rounded-xl bg-[#fff4d8] px-4 py-3 text-sm font-black text-[#a16d12]">{remoteMessage}</p>}
         <div className="mb-7 flex gap-3">
           <button onClick={() => setTab("results")} className={`admin-tab ${tab === "results" ? "admin-tab-active" : ""}`}><Activity size={18} /> คำตอบเรียลไทม์</button>
           <button onClick={() => setTab("questions")} className={`admin-tab ${tab === "questions" ? "admin-tab-active" : ""}`}><ListChecks size={18} /> จัดการข้อสอบ</button>

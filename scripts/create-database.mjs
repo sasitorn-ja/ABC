@@ -55,4 +55,13 @@ await sql`
   )
 `;
 await sql`CREATE INDEX IF NOT EXISTS quiz_questions_subject_position_idx ON quiz_questions (subject, position)`;
+
+await sql`
+  CREATE TABLE IF NOT EXISTS app_control (
+    id TEXT PRIMARY KEY,
+    reload_version BIGINT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )
+`;
+await sql`INSERT INTO app_control (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`;
 console.log("Database ready");

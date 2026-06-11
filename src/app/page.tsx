@@ -152,6 +152,7 @@ export default function HomePage() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadVersionRef = useRef<number | null>(null);
   const currentRecording = recordings[questionIndex];
 
   const questions = useMemo<Question[]>(
@@ -183,6 +184,27 @@ export default function HomePage() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const checkReload = async () => {
+      try {
+        const response = await fetch("/api/control", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = await response.json();
+        const version = Number(data.reloadVersion || 0);
+        if (reloadVersionRef.current === null) {
+          reloadVersionRef.current = version;
+        } else if (version > reloadVersionRef.current) {
+          window.location.reload();
+        }
+      } catch {
+        // The next interval retries automatically.
+      }
+    };
+    void checkReload();
+    const timer = window.setInterval(() => void checkReload(), 2000);
+    return () => window.clearInterval(timer);
   }, []);
 
   const resetRecording = (clearAll = false) => {

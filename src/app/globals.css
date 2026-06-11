@@ -192,6 +192,19 @@ body {
   color: white;
 }
 
+.remote-reload-button {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  border: 1px solid #ffb39f;
+  border-radius: 999px;
+  background: #fff1ec;
+  padding: .65rem 1rem;
+  color: #c75d42;
+  font-size: .78rem;
+  font-weight: 900;
+}
+
 .admin-label {
   display: block;
   margin-bottom: .35rem;
