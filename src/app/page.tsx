@@ -143,8 +143,10 @@ export default function HomePage() {
   const [micError, setMicError] = useState("");
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [adminTaps, setAdminTaps] = useState(0);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentRecording = recordings[questionIndex];
 
   const questions = useMemo<Question[]>(
@@ -159,6 +161,7 @@ export default function HomePage() {
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     };
   }, []);
 
@@ -224,16 +227,18 @@ export default function HomePage() {
     setSelected(null);
     setAnswers([]);
     setSaveStatus("idle");
+    setIsAdvancing(false);
     resetRecording(true);
     setScreen("quiz");
   };
 
-  const nextQuestion = () => {
+  const nextQuestion = (choiceAnswer: number | null = selected) => {
     const isSpeakingQuestion = questions[questionIndex].type === "speaking";
-    if (selected === null && !isSpeakingQuestion) return;
+    if (choiceAnswer === null && !isSpeakingQuestion) return;
     if (isSpeakingQuestion && !currentRecording) return;
-    const nextAnswers = [...answers, isSpeakingQuestion ? 0 : selected];
+    const nextAnswers = [...answers, isSpeakingQuestion ? 0 : choiceAnswer];
     setAnswers(nextAnswers);
+    setIsAdvancing(false);
     if (questionIndex === questions.length - 1) {
       void saveResult(nextAnswers);
       setScreen("result");
@@ -241,6 +246,13 @@ export default function HomePage() {
     }
     setQuestionIndex((current) => current + 1);
     setSelected(null);
+  };
+
+  const selectAnswer = (answer: number) => {
+    if (selected !== null || isAdvancing) return;
+    setSelected(answer);
+    setIsAdvancing(true);
+    advanceTimerRef.current = setTimeout(() => nextQuestion(answer), 650);
   };
 
   const saveResult = async (finalAnswers: (number | null)[]) => {
@@ -280,6 +292,8 @@ export default function HomePage() {
   const goHome = () => {
     setScreen("home");
     setSelected(null);
+    setIsAdvancing(false);
+    if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
     resetRecording(true);
   };
 
@@ -341,7 +355,8 @@ export default function HomePage() {
                 return (
                   <button
                     key={choice}
-                    onClick={() => selected === null && setSelected(index)}
+                    onClick={() => selectAnswer(index)}
+                    disabled={selected !== null || isAdvancing}
                     className={`choice ${revealCorrect ? "choice-correct" : ""} ${revealWrong ? "choice-wrong" : ""} ${chosen && selected !== null ? "choice-chosen" : ""}`}
                   >
                     <span className="choice-letter">{String.fromCharCode(65 + index)}</span>
@@ -361,9 +376,9 @@ export default function HomePage() {
             )}
           </div>
 
-          <button disabled={isSpeaking ? !currentRecording : selected === null} onClick={nextQuestion} className="primary-button mt-6 ml-auto">
+          {isSpeaking && <button disabled={!currentRecording} onClick={() => nextQuestion()} className="primary-button mt-6 ml-auto">
             {questionIndex === questions.length - 1 ? "ดูผลคะแนน" : "ข้อต่อไป"} <ArrowRight size={20} />
-          </button>
+          </button>}
         </section>
       </main>
     );
